@@ -1,0 +1,4 @@
+odom_model_type: omni
+odom_frame_id: odom
+base_frame_id: robot_base_footprint
+global_frame_id: map

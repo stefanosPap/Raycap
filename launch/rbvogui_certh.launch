@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<launch>
+    
+      <!-- Robot configuration -->
+      <arg name="robot_id"         default="robot"/>
+      <arg name="robot_model"      default="rbvogui_certh"/>
+      <arg name="prefix"           default="$(arg robot_id)"/>
+      <arg name="robot_xacro"      default="rbvogui_std.urdf.xacro"/>
+      <arg name="robot_xacro_path" default="$(find rbvogui_description)/robots/"/>
+      
+      <arg name="x_init_pose"      default="0"/>
+      <arg name="y_init_pose"      default="0"/>
+      <arg name="z_init_pose"      default="0"/>
+      <arg name="a_init_pose"      default="0"/>
+      <arg name="wheel_base"       default="0.439"/>  
+      <arg name="track_width"      default="0.439"/> 
+      <arg name="wheel_diameter"   default="0.22"/>
+
+      <arg name="localization"     default="false"/>
+      <arg name="map_file"         default="$(find raycap_certh_sim)/maps/map.yaml"/>
+      <arg name="world_file"       default="$(find raycap_certh_sim)/worlds/demo.world"/>
+      <arg name="rviz_config_file" default="$(find raycap_certh_sim)/config/rviz.rviz"/>
+      <arg name="amcl_config_file" default="$(find raycap_certh_sim)/config/amcl.yaml"/>
+
+      <!-- Launch gazebo -->
+      <include file="$(find gazebo_ros)/launch/empty_world.launch">
+            <arg name="world_name" value="$(arg world_file)"/>
+      </include>  
+
+      <!-- Load the URDF -->
+      <param name   ="robot_description" 
+             command="$(find xacro)/xacro --inorder '$(arg robot_xacro_path)$(arg robot_xacro)'" />
+    
+      <!-- Spawn the model -->
+      <node name   ="urdf_spawner_robot_model" 
+            pkg    ="gazebo_ros" 
+            type   ="spawn_model" 
+            respawn="false" 
+            output ="screen"
+            args   ="-x $(arg x_init_pose) 
+                     -y $(arg y_init_pose) 
+                     -z $(arg z_init_pose) 
+                     -Y $(arg a_init_pose) 
+                     -urdf 
+                     -param robot_description 
+                     -model $(arg robot_id)">
+      </node>
+
+      <!-- Publish the tfs-->
+      <node name="robot_state_publisher" 
+            pkg ="robot_state_publisher" 
+            type="robot_state_publisher">
+      </node>
+
+      <rosparam file="$(find raycap_certh_sim)/config/robot_control.yaml" command="load" subst_value="true"/>
+
+      <!-- Spawn Controllers-->
+      <node name   ="controller_spawner" 
+            pkg    ="controller_manager"
+            type   ="spawner" 
+            respawn="false" 
+            output ="screen"
+            args   ="joint_read_state_controller
+                     joint_read_command_controller">
+      </node>
+
+      <!-- Start localization mode -->
+      <group if="$(arg localization)">
+            <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+            <node pkg="tf" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 map odom 100" />
+            <node pkg="tf" type="static_transform_publisher" name="odom_to_footprint" args="0 0 0 0 0 0 odom robot_base_footprint 100" />
+            <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_config_file)"/>
+            <node pkg="amcl" type="amcl" name="amcl" output="screen">
+                  <rosparam command="load" file="$(arg amcl_config_file)" subst_value="true" />
+                  <remap from="/scan" to="/front_laser/scan"/>
+            </node>
+      </group>
+
+      <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+            <remap unless="$(arg has_safety_controller)" from="cmd_vel" to="$(arg cmd_vel_topic)" />
+            <remap if="$(arg has_safety_controller)" from="cmd_vel" to="$(arg cmd_vel_topic)_unsafe" />
+
+            <remap from="odom" to="$(arg odom_topic)" />
+
+            <!-- Move base params -->
+            <rosparam file="$(arg move_base_params_file)" command="load" subst_value="true"/>
+
+            <!-- Global costmap params-->
+            <rosparam file="$(arg costmap_common_params_file)" command="load" ns="global_costmap" subst_value="true"/>
+            <rosparam file="$(arg global_costmap_params_file)" command="load" subst_value="true"/>
+
+            <!-- Local costmap params-->
+            <rosparam file="$(arg costmap_common_params_file)" command="load" ns="local_costmap" subst_value="true"/>
+            <rosparam file="$(arg local_costmap_params_file)" command="load" subst_value="true"/>
+
+            <!-- Global planner params-->
+            <rosparam file="$(arg global_planner_params_file)" command="load" subst_value="true"/>
+
+            <!-- Local planner params-->
+            <rosparam file="$(arg local_planner_params_file)" command="load" subst_value="true"/>
+
+            <!-- Overwrites previous footprint values -->
+            <rosparam file="$(arg footprint_params_file)" command="load"/>
+      </node>
+     
+</launch>
