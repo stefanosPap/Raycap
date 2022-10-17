@@ -2,35 +2,45 @@
 <launch>
     
       <!-- Robot configuration -->
-      <arg name="robot_id"         default="robot"/>
-      <arg name="robot_model"      default="rbvogui_certh"/>
-      <arg name="prefix"           default="$(arg robot_id)"/>
-      <arg name="robot_xacro"      default="rbvogui_std.urdf.xacro"/>
-      <arg name="robot_xacro_path" default="$(find rbvogui_description)/robots/"/>
+      <arg name="robot_id"          default="robot"/>
+      <arg name="robot_model"       default="rbvogui_certh"/>
+      <arg name="prefix"            default="$(arg robot_id)"/>
+      <arg name="robot_xacro"       default="rbvogui_std.urdf.xacro"/>
+      <arg name="robot_xacro_path"  default="$(find rbvogui_description)/robots/"/>
       
-      <arg name="x_init_pose"      default="0"/>
-      <arg name="y_init_pose"      default="0"/>
-      <arg name="z_init_pose"      default="0"/>
-      <arg name="a_init_pose"      default="0"/>
-      <arg name="wheel_base"       default="0.439"/>  
-      <arg name="track_width"      default="0.439"/> 
-      <arg name="wheel_diameter"   default="0.22"/>
-      <arg name="front_scan_topic" default="front_laser/scan"/>
-      <arg name="rear_scan_topic" default="rear_laser/scan"/>
+      <arg name="x_init_pose"       default="0"/>
+      <arg name="y_init_pose"       default="0"/>
+      <arg name="z_init_pose"       default="0"/>
+      <arg name="a_init_pose"       default="0"/>
+      <arg name="wheel_base"        default="0.439"/>  
+      <arg name="track_width"       default="0.439"/> 
+      <arg name="wheel_diameter"    default="0.22"/>
+      <arg name="front_scan_topic"  default="front_laser/scan"/>
+      <arg name="rear_scan_topic"   default="rear_laser/scan"/>
 
-      <arg name="localization"     default="false"/>
-      <arg name="map_file"         default="$(find raycap_certh_sim)/maps/map.yaml"/>
-      <arg name="world_file"       default="$(find raycap_certh_sim)/worlds/demo.world"/>
-      <arg name="rviz_config_file" default="$(find raycap_certh_sim)/config/rviz.rviz"/>
-      <arg name="amcl_config_file" default="$(find raycap_certh_sim)/config/amcl.yaml"/>
+      <arg name="move_base_navigation"                default="false"/>
+      <arg name="move_base_flex_navigation"           default="false"/>
+      <arg name="map_file"                            default="$(find raycap_certh_sim)/maps/map.yaml"/>
+      <arg name="world_file"                          default="$(find raycap_certh_sim)/worlds/demo.world"/>
+      <arg name="rviz_move_base_config_file"          default="$(find raycap_certh_sim)/config/rviz/rviz_move_base.rviz"/>
+      <arg name="rviz_move_base_flex_config_file"     default="$(find raycap_certh_sim)/config/rviz/rviz_move_base_flex.rviz"/>
+      <arg name="amcl_config_file"                    default="$(find raycap_certh_sim)/config/amcl.yaml"/>
 
-      <arg name="move_base_params_file"      default="$(find raycap_certh_sim)/config/move_base_params.yaml"/>
-      <arg name="costmap_common_params_file" default="$(find raycap_certh_sim)/config/costmap_common_params.yaml"/>
-      <arg name="global_costmap_params_file" default="$(find raycap_certh_sim)/config/global_costmap_params.yaml"/>
-      <arg name="global_planner_params_file" default="$(find raycap_certh_sim)/config/global_planner_params.yaml"/>
-      <arg name="local_planner_params_file"  default="$(find raycap_certh_sim)/config/teb_local_planner_omni_params.yaml"/>
-      <arg name="local_costmap_params_file"  default="$(find raycap_certh_sim)/config/local_costmap_params.yaml"/>
-      <arg name="footprint_params_file"      default="$(find raycap_certh_sim)/config/rbvogui.yaml"/>
+      <arg name="move_base_params_file"      default="$(find raycap_certh_sim)/config/move_base/move_base_params.yaml"/>
+      <arg name="costmap_common_params_file" default="$(find raycap_certh_sim)/config/move_base/costmap_common_params.yaml"/>
+      <arg name="global_planner_params_file" default="$(find raycap_certh_sim)/config/move_base/global_planner_params.yaml"/>
+      <arg name="global_costmap_params_file" default="$(find raycap_certh_sim)/config/move_base/global_costmap_params.yaml"/>
+      <arg name="local_planner_params_file"  default="$(find raycap_certh_sim)/config/move_base/local_planner_params.yaml"/>
+      <arg name="local_costmap_params_file"  default="$(find raycap_certh_sim)/config/move_base/local_costmap_params.yaml"/>
+      <arg name="footprint_params_file"      default="$(find raycap_certh_sim)/config/move_base/rbvogui.yaml"/>
+
+      <arg name="move_base_params_flex_file"      default="$(find raycap_certh_sim)/config/move_base_flex/move_base_params.yaml"/>
+      <arg name="costmap_common_params_flex_file" default="$(find raycap_certh_sim)/config/move_base_flex/costmap_common_params.yaml"/>
+      <arg name="global_planner_params_flex_file" default="$(find raycap_certh_sim)/config/move_base_flex/global_planner_params.yaml"/>
+      <arg name="global_costmap_params_flex_file" default="$(find raycap_certh_sim)/config/move_base_flex/global_costmap_params.yaml"/>
+      <arg name="local_planner_params_flex_file"  default="$(find raycap_certh_sim)/config/move_base_flex/local_planner_params.yaml"/>
+      <arg name="local_costmap_params_flex_file"  default="$(find raycap_certh_sim)/config/move_base_flex/local_costmap_params.yaml"/>
+      <arg name="footprint_params_flex_file"      default="$(find raycap_certh_sim)/config/move_base_flex/rbvogui.yaml"/>
 
       <!-- Launch gazebo -->
       <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -74,44 +84,88 @@
                      joint_read_command_controller">
       </node>
 
-      <!-- Start localization mode -->
-      <group if="$(arg localization)">
+      <!-- Start navigation mode with move_base -->
+      <group if="$(arg move_base_navigation)">
             
             <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
             
             <node pkg="tf" type="static_transform_publisher" name="map_to_odom"       args="0 0 0 0 0 0 map odom 100" />
             <node pkg="tf" type="static_transform_publisher" name="odom_to_footprint" args="0 0 0 0 0 0 odom robot_base_footprint 100" />
             
-            <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_config_file)"/>
+            <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_move_base_config_file)"/>
             
             <node pkg="amcl" type="amcl" name="amcl" output="screen">
                   <rosparam command="load" file="$(arg amcl_config_file)" subst_value="true" />
                   <remap from="/scan" to="/front_laser/scan"/>
             </node>
       
+            <!-- Launch move base -->>
+            <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+
+                  <!-- Move base params -->
+                  <rosparam file="$(arg move_base_params_file)" command="load" subst_value="true"/>
+
+                  <!-- Global costmap params-->
+                  <rosparam file="$(arg costmap_common_params_file)" command="load" ns="global_costmap" subst_value="true"/>
+                  <rosparam file="$(arg global_costmap_params_file)" command="load" subst_value="true"/>
+
+                  <!-- Local costmap params-->
+                  <rosparam file="$(arg costmap_common_params_file)" command="load" ns="local_costmap" subst_value="true"/>
+                  <rosparam file="$(arg local_costmap_params_file)" command="load" subst_value="true"/>
+
+                  <!-- Global planner params-->
+                  <rosparam file="$(arg global_planner_params_file)" command="load" subst_value="true"/>
+
+                  <!-- Local planner params-->
+                  <rosparam file="$(arg local_planner_params_file)" command="load" subst_value="true"/>
+
+                  <!-- Overwrites previous footprint values -->
+                  <rosparam file="$(arg footprint_params_file)" command="load"/>
+            </node>
+            
       </group>
 
-      <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+      <!-- Start navigation mode with move_base_flex -->
+      <group if="$(arg move_base_flex_navigation)">
 
-            <!-- Move base params -->
-            <rosparam file="$(arg move_base_params_file)" command="load" subst_value="true"/>
+            <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+            
+            <node pkg="tf" type="static_transform_publisher" name="map_to_odom"       args="0 0 0 0 0 0 map odom 100" />
+            <node pkg="tf" type="static_transform_publisher" name="odom_to_footprint" args="0 0 0 0 0 0 odom robot_base_footprint 100" />
+            
+            <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_move_base_flex_config_file)"/>
+            
+            <node pkg="amcl" type="amcl" name="amcl" output="screen">
+                  <rosparam command="load" file="$(arg amcl_config_file)" subst_value="true" />
+                  <remap from="/scan" to="/front_laser/scan"/>
+            </node>
+      
+            <!-- Launch move base -->>
+            <node name="move_base_flex" pkg="mbf_costmap_nav" type="mbf_costmap_nav" required="true" output="screen">
 
-            <!-- Global costmap params-->
-            <rosparam file="$(arg costmap_common_params_file)" command="load" ns="global_costmap" subst_value="true"/>
-            <rosparam file="$(arg global_costmap_params_file)" command="load" subst_value="true"/>
+                  <param name="SBPLLatticePlanner/primitive_filename" value="$(find raycap_certh_sim)/config/mprim/pr2.mprim" />
 
-            <!-- Local costmap params-->
-            <rosparam file="$(arg costmap_common_params_file)" command="load" ns="local_costmap" subst_value="true"/>
-            <rosparam file="$(arg local_costmap_params_file)" command="load" subst_value="true"/>
+                  <!-- Move base params -->
+                  <rosparam file="$(arg move_base_params_flex_file)" command="load" subst_value="true"/>
 
-            <!-- Global planner params-->
-            <rosparam file="$(arg global_planner_params_file)" command="load" subst_value="true"/>
+                  <!-- Global costmap params-->
+                  <rosparam file="$(arg costmap_common_params_flex_file)" command="load" ns="global_costmap" subst_value="true"/>
+                  <rosparam file="$(arg global_costmap_params_flex_file)" command="load" subst_value="true"/>
 
-            <!-- Local planner params-->
-            <rosparam file="$(arg local_planner_params_file)" command="load" subst_value="true"/>
+                  <!-- Local costmap params-->
+                  <rosparam file="$(arg costmap_common_params_flex_file)" command="load" ns="local_costmap" subst_value="true"/>
+                  <rosparam file="$(arg local_costmap_params_flex_file)" command="load" subst_value="true"/>
 
-            <!-- Overwrites previous footprint values -->
-            <rosparam file="$(arg footprint_params_file)" command="load"/>
-      </node>
-     
+                  <!-- Global planner params-->
+                  <rosparam file="$(arg global_planner_params_flex_file)" command="load" subst_value="true"/>
+
+                  <!-- Local planner params-->
+                  <rosparam file="$(arg local_planner_params_flex_file)" command="load" subst_value="true"/>
+
+                  <!-- Overwrites previous footprint values -->
+                  <rosparam file="$(arg footprint_params_flex_file)" command="load"/>
+            </node>
+
+      </group>
+
 </launch>
