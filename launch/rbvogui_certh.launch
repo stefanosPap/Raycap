@@ -19,6 +19,7 @@
       <arg name="rear_scan_topic" default="rear_laser/scan"/>
 
       <arg name="move_base_navigation"          default="false"/>
+      <arg name="move_base_flex_navigation"          default="false"/>
       <arg name="map_file"                      default="$(find raycap_certh_sim)/maps/map.yaml"/>
       <arg name="world_file"                    default="$(find raycap_certh_sim)/worlds/demo.world"/>
       <arg name="rviz_move_base_config_file"    default="$(find raycap_certh_sim)/config/rviz.rviz"/>
@@ -31,6 +32,14 @@
       <arg name="local_planner_params_file"  default="$(find raycap_certh_sim)/config/teb_local_planner_omni_params.yaml"/>
       <arg name="local_costmap_params_file"  default="$(find raycap_certh_sim)/config/local_costmap_params.yaml"/>
       <arg name="footprint_params_file"      default="$(find raycap_certh_sim)/config/rbvogui.yaml"/>
+
+      <arg name="move_base_params_flex_file"      default="$(find raycap_certh_sim)/config/move_base_params.yaml"/>
+      <arg name="costmap_common_params_flex_file" default="$(find raycap_certh_sim)/config/costmap_common_params.yaml"/>
+      <arg name="global_planner_params_flex_file" default="$(find raycap_certh_sim)/config/global_planner_params.yaml"/>
+      <arg name="global_costmap_params_flex_file" default="$(find raycap_certh_sim)/config/global_costmap_params.yaml"/>
+      <arg name="local_planner_params_flex_file"  default="$(find raycap_certh_sim)/config/teb_local_planner_omni_params.yaml"/>
+      <arg name="local_costmap_params_flex_file"  default="$(find raycap_certh_sim)/config/local_costmap_params.yaml"/>
+      <arg name="footprint_params_flex_file"      default="$(find raycap_certh_sim)/config/rbvogui.yaml"/>
 
       <!-- Launch gazebo -->
       <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -123,7 +132,7 @@
             <node pkg="tf" type="static_transform_publisher" name="map_to_odom"       args="0 0 0 0 0 0 map odom 100" />
             <node pkg="tf" type="static_transform_publisher" name="odom_to_footprint" args="0 0 0 0 0 0 odom robot_base_footprint 100" />
             
-            <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_move_base_flex_config_file)"/>
+            <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_move_base_config_file)"/>
             
             <node pkg="amcl" type="amcl" name="amcl" output="screen">
                   <rosparam command="load" file="$(arg amcl_config_file)" subst_value="true" />
