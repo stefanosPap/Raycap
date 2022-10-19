@@ -4,7 +4,7 @@
       <!-- Robot configuration -->
       <arg name="robot_id"          default="robot"/>
       <arg name="robot_model"       default="rbvogui_certh"/>
-      <arg name="prefix"            default="$(arg robot_id)"/>
+      <arg name="prefix"            default="$(arg robot_id)_"/>
       <arg name="robot_xacro"       default="rbvogui_std.urdf.xacro"/>
       <arg name="robot_xacro_path"  default="$(find rbvogui_description)/robots/"/>
       
@@ -41,6 +41,7 @@
       <arg name="local_planner_params_flex_file"  default="$(find raycap_certh_sim)/config/move_base_flex/local_planner_params.yaml"/>
       <arg name="local_costmap_params_flex_file"  default="$(find raycap_certh_sim)/config/move_base_flex/local_costmap_params.yaml"/>
       <arg name="footprint_params_flex_file"      default="$(find raycap_certh_sim)/config/move_base_flex/rbvogui.yaml"/>
+      <arg name="global_frame"                    default="$(arg prefix)map"/>
 
       <!-- Launch gazebo -->
       <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -80,7 +81,8 @@
             type   ="spawner" 
             respawn="false" 
             output ="screen"
-            args   ="joint_read_state_controller
+            args   ="robotnik_base_control
+                     joint_read_state_controller
                      joint_read_command_controller">
       </node>
 
@@ -127,19 +129,23 @@
 
       <!-- Start navigation mode with move_base_flex -->
       <group if="$(arg move_base_flex_navigation)">
+            
+            <remap from="map" to="$(arg prefix)map"/>
+            <remap from="odom" to="robot_odom" />
 
-            <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
-            
-            <node pkg="tf" type="static_transform_publisher" name="map_to_odom"       args="0 0 0 0 0 0 map odom 100" />
-            <node pkg="tf" type="static_transform_publisher" name="odom_to_footprint" args="0 0 0 0 0 0 odom robot_base_footprint 100" />
-            
+            <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
+                  <param name="frame_id" value="$(arg prefix)map"/>
+            </node>
+
             <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_move_base_flex_config_file)"/>
             
             <node pkg="amcl" type="amcl" name="amcl" output="screen">
                   <rosparam command="load" file="$(arg amcl_config_file)" subst_value="true" />
                   <remap from="/scan" to="/front_laser/scan"/>
             </node>
-      
+
+            <node pkg="tf" type="static_transform_publisher" name="map_odom" args="0 0 0 0 0 0 robot_map robot_odom 100" />            
+            
             <!-- Launch move base -->>
             <node name="move_base_flex" pkg="mbf_costmap_nav" type="mbf_costmap_nav" required="true" output="screen">
 
