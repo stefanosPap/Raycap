@@ -86,13 +86,20 @@
                      joint_read_command_controller">
       </node>
 
+      <node pkg="twist_mux" type="twist_mux" name="twist_mux">
+            <rosparam command="load" file="$(find raycap_certh_sim)/config/twist_mux.yaml" />
+            <remap from="cmd_vel_out" to="/robotnik_base_control/cmd_vel" />
+      </node>
+      
       <!-- Start navigation mode with move_base -->
       <group if="$(arg move_base_navigation)">
             
-            <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
-            
-            <node pkg="tf" type="static_transform_publisher" name="map_to_odom"       args="0 0 0 0 0 0 map odom 100" />
-            <node pkg="tf" type="static_transform_publisher" name="odom_to_footprint" args="0 0 0 0 0 0 odom robot_base_footprint 100" />
+            <remap from="map" to="$(arg prefix)map"/>
+            <remap from="odom" to="/robot_odom" />
+
+            <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
+                  <param name="frame_id" value="$(arg prefix)map"/>
+            </node>
             
             <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_move_base_config_file)"/>
             
@@ -101,7 +108,7 @@
                   <remap from="/scan" to="/front_laser/scan"/>
             </node>
       
-            <!-- Launch move base -->>
+            <!-- Launch move base -->
             <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
 
                   <!-- Move base params -->
@@ -131,12 +138,12 @@
       <group if="$(arg move_base_flex_navigation)">
             
             <remap from="map" to="$(arg prefix)map"/>
-            <remap from="odom" to="robot_odom" />
+            <remap from="odom" to="/robot_odom" />
 
             <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
                   <param name="frame_id" value="$(arg prefix)map"/>
             </node>
-
+            
             <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_move_base_flex_config_file)"/>
             
             <node pkg="amcl" type="amcl" name="amcl" output="screen">
@@ -144,12 +151,9 @@
                   <remap from="/scan" to="/front_laser/scan"/>
             </node>
 
-            <node pkg="tf" type="static_transform_publisher" name="map_odom" args="0 0 0 0 0 0 robot_map robot_odom 100" />            
-            
-            <!-- Launch move base -->>
+            <!-- Launch move base -->
             <node name="move_base_flex" pkg="mbf_costmap_nav" type="mbf_costmap_nav" required="true" output="screen">
-
-                  <param name="SBPLLatticePlanner/primitive_filename" value="$(find raycap_certh_sim)/config/mprim/pr2.mprim" />
+                  <param name="frame_id" value="$(arg prefix)map"/>
 
                   <!-- Move base params -->
                   <rosparam file="$(arg move_base_params_flex_file)" command="load" subst_value="true"/>
@@ -161,17 +165,20 @@
                   <!-- Local costmap params-->
                   <rosparam file="$(arg costmap_common_params_flex_file)" command="load" ns="local_costmap" subst_value="true"/>
                   <rosparam file="$(arg local_costmap_params_flex_file)" command="load" subst_value="true"/>
-
-                  <!-- Global planner params-->
-                  <rosparam file="$(arg global_planner_params_flex_file)" command="load" subst_value="true"/>
-
+                 
                   <!-- Local planner params-->
-                  <rosparam file="$(arg local_planner_params_flex_file)" command="load" subst_value="true"/>
+                  <rosparam file="$(arg local_planner_params_file)" command="load" subst_value="true"/>
 
                   <!-- Overwrites previous footprint values -->
-                  <rosparam file="$(arg footprint_params_flex_file)" command="load"/>
+                  <rosparam file="$(arg footprint_params_file)" command="load"/>
+      
+            </node>
+
+            <node name="move_base_legacy_relay" pkg="mbf_costmap_nav" type="move_base_legacy_relay.py">
+                  <rosparam file="$(find raycap_certh_sim)/config/move_base_flex/default_planner.yaml" command="load" subst_value="true"/>
             </node>
 
       </group>
+      
 
 </launch>
