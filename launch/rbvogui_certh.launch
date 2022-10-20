@@ -155,6 +155,7 @@
 
             <!-- Launch move base -->
             <node name="move_base_flex" pkg="mbf_costmap_nav" type="mbf_costmap_nav" required="true" output="screen">
+                  <param name="frame_id" value="$(arg prefix)map"/>
 
                   <!-- Move base params -->
                   <rosparam file="$(arg move_base_params_flex_file)" command="load" subst_value="true"/>
