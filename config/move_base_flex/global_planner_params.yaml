@@ -1,9 +1,16 @@
-base_global_planner: SBPLLatticePlanner
+#base_global_planner: SBPLLatticePlanner
 
-SBPLLatticePlanner:
-  environment_type: XYThetaLattice
-  planner_type: ARAPlanner
-  allocated_time: 5.0
-  initial_epsilon: 3.0
-  forward_search: false
-  allow_unknown: true
+#SBPLLatticePlanner:
+#  environment_type: XYThetaLattice
+#  planner_type: ARAPlanner
+#  allocated_time: 5.0
+#  initial_epsilon: 3.0
+#  forward_search: false
+#  allow_unknown: true
+
+base_global_planner: global_planner/GlobalPlanner
+
+GlobalPlanner:
+  planner_frequency: 1.0
+  planner_patience: 0.0
+  orientation_mode: 2 # interpolate from current orientation to last orientation
