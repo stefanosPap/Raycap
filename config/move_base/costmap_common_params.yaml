@@ -22,4 +22,12 @@ obstacle_laser_layer:
     marking: true
     clearing: true
 
-
+obstacle_camera_layer:
+  obstacle_range: 2.5
+  raytrace_range: 5.5
+  observation_sources: front_rgbd_to_scan
+  front_rgbd_to_scan:
+    data_type: LaserScan
+    topic: $(arg front_rgbd_to_scan_topic)
+    marking: true
+    clearing: true

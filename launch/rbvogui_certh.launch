@@ -26,22 +26,27 @@
       <arg name="rviz_move_base_flex_config_file"     default="$(find raycap_certh_sim)/config/rviz/rviz_move_base_flex.rviz"/>
       <arg name="amcl_config_file"                    default="$(find raycap_certh_sim)/config/amcl.yaml"/>
 
-      <arg name="move_base_params_file"      default="$(find raycap_certh_sim)/config/move_base/move_base_params.yaml"/>
-      <arg name="costmap_common_params_file" default="$(find raycap_certh_sim)/config/move_base/costmap_common_params.yaml"/>
-      <arg name="global_planner_params_file" default="$(find raycap_certh_sim)/config/move_base/global_planner_params.yaml"/>
-      <arg name="global_costmap_params_file" default="$(find raycap_certh_sim)/config/move_base/global_costmap_params.yaml"/>
-      <arg name="local_planner_params_file"  default="$(find raycap_certh_sim)/config/move_base/local_planner_params.yaml"/>
-      <arg name="local_costmap_params_file"  default="$(find raycap_certh_sim)/config/move_base/local_costmap_params.yaml"/>
-      <arg name="footprint_params_file"      default="$(find raycap_certh_sim)/config/move_base/rbvogui.yaml"/>
+      <arg name="move_base_params_file"               default="$(find raycap_certh_sim)/config/move_base/move_base_params.yaml"/>
+      <arg name="costmap_common_params_file"          default="$(find raycap_certh_sim)/config/move_base/costmap_common_params.yaml"/>
+      <arg name="global_planner_params_file"          default="$(find raycap_certh_sim)/config/move_base/global_planner_params.yaml"/>
+      <arg name="global_costmap_params_file"          default="$(find raycap_certh_sim)/config/move_base/global_costmap_params.yaml"/>
+      <arg name="local_planner_params_file"           default="$(find raycap_certh_sim)/config/move_base/local_planner_params.yaml"/>
+      <arg name="local_costmap_params_file"           default="$(find raycap_certh_sim)/config/move_base/local_costmap_params.yaml"/>
+      <arg name="footprint_params_file"               default="$(find raycap_certh_sim)/config/move_base/rbvogui.yaml"/>
 
-      <arg name="move_base_params_flex_file"      default="$(find raycap_certh_sim)/config/move_base_flex/move_base_params.yaml"/>
-      <arg name="costmap_common_params_flex_file" default="$(find raycap_certh_sim)/config/move_base_flex/costmap_common_params.yaml"/>
-      <arg name="global_planner_params_flex_file" default="$(find raycap_certh_sim)/config/move_base_flex/global_planner_params.yaml"/>
-      <arg name="global_costmap_params_flex_file" default="$(find raycap_certh_sim)/config/move_base_flex/global_costmap_params.yaml"/>
-      <arg name="local_planner_params_flex_file"  default="$(find raycap_certh_sim)/config/move_base_flex/local_planner_params.yaml"/>
-      <arg name="local_costmap_params_flex_file"  default="$(find raycap_certh_sim)/config/move_base_flex/local_costmap_params.yaml"/>
-      <arg name="footprint_params_flex_file"      default="$(find raycap_certh_sim)/config/move_base_flex/rbvogui.yaml"/>
-      <arg name="global_frame"                    default="$(arg prefix)map"/>
+      <arg name="move_base_params_flex_file"          default="$(find raycap_certh_sim)/config/move_base_flex/move_base_params.yaml"/>
+      <arg name="costmap_common_params_flex_file"     default="$(find raycap_certh_sim)/config/move_base_flex/costmap_common_params.yaml"/>
+      <arg name="global_planner_params_flex_file"     default="$(find raycap_certh_sim)/config/move_base_flex/global_planner_params.yaml"/>
+      <arg name="global_costmap_params_flex_file"     default="$(find raycap_certh_sim)/config/move_base_flex/global_costmap_params.yaml"/>
+      <arg name="local_planner_params_flex_file"      default="$(find raycap_certh_sim)/config/move_base_flex/local_planner_params.yaml"/>
+      <arg name="local_costmap_params_flex_file"      default="$(find raycap_certh_sim)/config/move_base_flex/local_costmap_params.yaml"/>
+      <arg name="footprint_params_flex_file"          default="$(find raycap_certh_sim)/config/move_base_flex/rbvogui.yaml"/>
+      <arg name="global_frame"                        default="$(arg prefix)map"/>
+      <arg name="front_output_scan"                   default="front_laser/scan_filtered"/>
+      <arg name="front_input_scan"                    default="front_laser/scan"/>
+      <arg name="laser_filters_file"                  default="$(find raycap_certh_sim)/config/scan_filter.yaml"/>
+      <arg name="front_rgbd_to_scan_topic"            default="$(optenv ROBOT_NAVIGATION_FRONT_RGBD_TO_SCAN front_rgbd_camera/point_cloud_scan_filtered)"/>
+      <arg name="use_gpu"                             default="true"/>
 
       <!-- Launch gazebo -->
       <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -65,6 +70,7 @@
                      -urdf 
                      -param robot_description 
                      -model $(arg robot_id)">
+                     
       </node>
 
       <!-- Publish the tfs-->
@@ -94,9 +100,6 @@
       <!-- Start navigation mode with move_base -->
       <group if="$(arg move_base_navigation)">
             
-            <remap from="map" to="$(arg prefix)map"/>
-            <remap from="odom" to="/robot_odom" />
-
             <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
                   <param name="frame_id" value="$(arg prefix)map"/>
             </node>
@@ -110,6 +113,9 @@
       
             <!-- Launch move base -->
             <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+                  
+                  <remap from="odom" to="robotnik_base_control/odom" />
+                  <remap from="cmd_vel" to="move_base/cmd_vel" />
 
                   <!-- Move base params -->
                   <rosparam file="$(arg move_base_params_file)" command="load" subst_value="true"/>
@@ -138,10 +144,7 @@
       <group if="$(arg move_base_flex_navigation)">
             
             <node name="static_publisher" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 map robot_map 100"/>
-            
-            <remap from="map" to="$(arg prefix)map"/>
-            <remap from="odom" to="/robot_odom" />
-
+                        
             <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
                   <param name="frame_id" value="$(arg prefix)map"/>
             </node>
@@ -155,6 +158,9 @@
 
             <!-- Launch move base -->
             <node name="move_base_flex" pkg="mbf_costmap_nav" type="mbf_costmap_nav" required="true" output="screen">
+
+                  <remap from="odom" to="robotnik_base_control/odom" />
+
                   <param name="frame_id" value="$(arg prefix)map"/>
 
                   <!-- Move base params -->
@@ -181,6 +187,18 @@
             </node>
 
       </group>
-      
-
+      <!-- 
+      <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
+            <param name="output_frame" value="robot_odom"/>
+            <param name="freq" value="30.0"/>
+            <param name="sensor_timeout" value="1.0"/>
+            <param name="odom_used" value="true"/>
+            <param name="imu_used" value="false"/>
+            <param name="vo_used" value="false"/>
+            <param name="debug" value="false"/>
+            <param name="self_diagnose" value="false"/>
+            <remap from="/odom" to="/robotnik_base_control/odom"/>
+            <remap from="/imu_data" to="/imu/data"/>
+      </node>
+      -->
 </launch>
